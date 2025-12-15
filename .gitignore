@@ -1,0 +1,41 @@
+# Dependencies
+node_modules/
+
+# Environment Variables (IMPORTANT: keep secrets out of git)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# TypeScript Build Output
+dist/
+build/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs/
+*.log
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Editor Directories and Files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+
+# Testing
+coverage/
+.nyc_output/
+
+# Optional: Redis dumps (if you run redis locally in this folder)
+dump.rdb

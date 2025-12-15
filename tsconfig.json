@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist",
+
+   
+    "module": "node16",             
+    "moduleResolution": "node16",       
+    "target": "es2020",               
+    "esModuleInterop": true,          
+
+    "lib": ["es2020"],
+    "types": ["node"],
+
+    "sourceMap": true,
+    "declaration": true,
+
+    "strict": true,
+    "noUncheckedIndexedAccess": true, 
+    "exactOptionalPropertyTypes": true,
+
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules"]
+}
