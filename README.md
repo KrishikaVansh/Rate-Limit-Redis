@@ -22,13 +22,17 @@ Installation
 
 1. Clone the repository
    git clone https://github.com/KrishikaVansh/Rate-Limit-Redis.git
+
    cd Rate-Limit-Redis
 
 2. Install Dependencies
+
    npm install
 
 3. Configure Environment
+
    Create a .env file in the root directory:
+
    PORT=3000
    REDIS_URL=redis://localhost:6379
 
@@ -48,11 +52,3 @@ redis-cli ping  # Should return PONG
 # Development Mode
 npx ts-node src/server.ts
 
-Folder Structure
-
-src/
-├── config/
-│   └── redis.ts         # Redis connection singleton
-├── middleware/
-│   └── apiRateLimit.ts  # Rate limit logic & configuration
-└── server.ts            # Application entry point
