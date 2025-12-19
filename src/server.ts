@@ -20,6 +20,7 @@ import express from 'express';
 import dotenv from 'dotenv';
 import { connectRedis } from './config/redis';
 import { createApiRateLimiter } from './middleware/apiRateLimit';
+import { requestLogger } from './middleware/reqLogger';
 
 
 dotenv.config();
@@ -28,6 +29,7 @@ const app = express();
 async function start() {
     try {
         await connectRedis();
+        app.use(requestLogger);
        app.use(createApiRateLimiter());
 
 
