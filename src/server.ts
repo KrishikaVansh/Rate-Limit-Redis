@@ -18,7 +18,7 @@
 
 import express from 'express';
 import dotenv from 'dotenv';
-import { connectRedis } from './config/redis';
+import { connectRedis,redisClient } from './config/redis';
 import { createApiRateLimiter } from './middleware/apiRateLimit';
 import { requestLogger } from './middleware/reqLogger';
 
@@ -30,6 +30,33 @@ async function start() {
     try {
         await connectRedis();
         app.use(requestLogger);
+
+        app.get('/health', async (req, res) => {
+            try {
+                // Check if Redis is actually responding
+                await redisClient.ping();
+                
+                res.status(200).json({ 
+                    status: 'UP', 
+                    timestamp: new Date().toISOString(),
+                    services: {
+                        redis: 'connected',
+                        server: 'running'
+                    }
+                });
+            } catch (error) {
+                // If Redis is down, return 503 (Service Unavailable)
+                res.status(503).json({ 
+                    status: 'DOWN', 
+                    timestamp: new Date().toISOString(),
+                    services: {
+                        redis: 'disconnected',
+                        server: 'running'
+                    }
+                });
+            }
+        });
+        
        app.use(createApiRateLimiter());
 
 

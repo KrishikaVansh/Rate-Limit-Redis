@@ -1,52 +1,54 @@
-// src/utils/logger.ts
 import { createLogger, format, transports } from 'winston';
 import DailyRotateFile from 'winston-daily-rotate-file';
 
 const { combine, timestamp, printf } = format;
 
-/**
- * Custom Log Format
- * -----------------
- * Formats log entries into a human-readable, indented JSON structure.
- */
+// Custom Pretty Print Format
 const prettyJson = printf(({ level, message, timestamp }) => {
     return `${timestamp} [${level}]:\n${JSON.stringify(message, null, 4)}\n------------------------------------------------`;
 });
 
 /**
- * Log Rotation Configuration
- * --------------------------
- * Defines how logs are rotated and archived.
- * - filename: Pattern for the log file name (%DATE% is replaced auto).
- * - datePattern: The frequency of rotation (YYYY-MM-DD = Daily).
- * - zippedArchive: Compresses old logs to .gzip to save space.
- * - maxSize: If a single file exceeds this size, it rotates immediately.
- * - maxFiles: How long to keep logs before deleting them (e.g., '14d' = 14 days).
+ * 1. General Transport (Info + Errors)
+ * ------------------------------------
+ * Logs everything happening in the system.
+ * Retention: 14 Days.
  */
-const fileRotateTransport = new DailyRotateFile({
-    filename: 'logs/server-%DATE%.log',
+const combinedRotateTransport = new DailyRotateFile({
+    filename: 'logs/application-%DATE%.log',
     datePattern: 'YYYY-MM-DD',
     zippedArchive: true,
-    maxSize: '20m', // Rotate if file size exceeds 20 MB
-    maxFiles: '14d', // Auto-delete logs older than 14 days
+    maxSize: '20m',
+    maxFiles: '14d', // Keep general logs for 2 weeks
 });
 
 /**
- * Logger Instance (Winston)
- * -------------------------
- * Centralized logging configuration with rotation strategy.
+ * 2. Error Transport (Errors ONLY)
+ * --------------------------------
+ * Logs only failed requests (4xx, 5xx) and system crashes.
+ * Retention: 30 Days (Longer retention for debugging).
+ */
+const errorRotateTransport = new DailyRotateFile({
+    level: 'error', // <--- Crucial: Only accepts 'error' level logs
+    filename: 'logs/error-%DATE%.log',
+    datePattern: 'YYYY-MM-DD',
+    zippedArchive: true,
+    maxSize: '20m',
+    maxFiles: '30d', // Keep error logs for 1 month
+});
+
+/**
+ * Logger Instance
  */
 export const logger = createLogger({
-    level: 'info',
+    level: 'info', // Default level
     format: combine(
         timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
         prettyJson
     ),
     transports: [
-        // 1. Daily Rotate File: Handles storage and cleanup
-        fileRotateTransport,
-        
-        // 2. Console: For real-time monitoring in terminal/AWS CloudWatch
-        new transports.Console()
+        combinedRotateTransport, // Write to application log
+        errorRotateTransport,    // Write to error log
+        //new transports.Console() // Write to terminal
     ]
 });
