@@ -25,6 +25,7 @@ import { requestLogger } from './middleware/reqLogger';
 
 dotenv.config();
 const app = express();
+app.set('trust proxy', true);
 
 async function start() {
     try {

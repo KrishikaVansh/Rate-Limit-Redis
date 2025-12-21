@@ -26,18 +26,30 @@
  * and reused for all incoming requests.
  */
 
-
 import { rateLimit } from 'express-rate-limit';
 import { RedisStore } from 'rate-limit-redis';
 import { Request } from 'express';
+import ipaddr from 'ipaddr.js';
 import { redisClient } from '../config/redis';
+
+function getIpRateLimitKey(ip: string): string {
+    const addr = ipaddr.process(ip); // handles IPv4-mapped IPv6
+
+    if (addr.kind() === 'ipv4') {
+        return `ipv4:${addr.toString()}`;
+    }
+
+    const [network] = ipaddr.parseCIDR(`${addr.toString()}/64`);
+    return `ipv6:${network.toString()}/64`;
+}
+
 export const createApiRateLimiter = () => {
     return rateLimit({
-        windowMs: 15 * 60 * 1000, 
+        windowMs: 15 * 60 * 1000,
         standardHeaders: true,
         legacyHeaders: false,
 
-       
+
         store: new RedisStore({
             sendCommand: (...args: string[]) => redisClient.sendCommand(args),
             prefix: 'rl:',
@@ -45,21 +57,25 @@ export const createApiRateLimiter = () => {
 
         keyGenerator: (req: Request): string => {
             const apiKey = req.headers['x-api-key'];
-            return apiKey && typeof apiKey === 'string' 
-                ? `apikey:${apiKey}`  
-                : `ip:${req.ip}`;
-        },
 
-     
+            if (apiKey && typeof apiKey === 'string') {
+                return `apikey:${apiKey}`;
+            }
+
+            const ip = req.ip ?? '0.0.0.0';
+            return `ip:${getIpRateLimitKey(ip)}`;
+        },
+        validate:{
+            keyGeneratorIpFallback:false
+
+        },
+        
+
         max: (req: Request) => {
-            if (req.headers['x-api-key']) return 100;  // api key max limit 100 in 15 miniutes
-            return 10;  //ip max limit 10 in 15 miniutes if fallback to ip
+            if (req.headers['x-api-key']) return 100;
+            return 10;
         },
 
-        message: { 
-            status: 429, 
-            error: 'Too many requests. Please try again later.' 
-        }
+        message: "429: Too many requests, please try again later.",
     });
 };
-
